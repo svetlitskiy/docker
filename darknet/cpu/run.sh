@@ -1,8 +1,13 @@
-#!/bin/bash
 #
-# Darkenet CPU Run Script
-# @author Loreto Parisi (loretoparisi at gmail dot com)
+# Darkenet AB CPU
+#
+# @author Aleksey Svetlitskiy
 # v1.0.0
-# @2016 Loreto Parisi (loretoparisi at gmail dot com)
 #
-docker run --rm -it --name darknet darknet bash
+# Copyright (c) 2019 Aleksey Svetlitskiy - https://github.com/svetlitskiy/docker
+#
+xhost +local:
+IMAGE=darknet_cpu
+docker run -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/:/root/home --rm -it $IMAGE bash
+#docker run -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix darknet_cpu ./darknet detector test cfg/coco.data cfg/yolo.cfg yolo.weights data/dog.jpg
+

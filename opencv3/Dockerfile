@@ -8,6 +8,9 @@ FROM ubuntu:16.04
 
 MAINTAINER Loreto Parisi <loretoparisi@gmail.com>
 
+RUN \
+    echo "PS1='\[\e[0;32m\]\u\[\e[m\] \[\e[1;34m\]\w\[\e[m\] \[\e[1;32m\]\$\[\e[m\] '" >> ~/.bashrc
+
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -20,8 +23,6 @@ RUN apt-get update && apt-get install -y \
 	libpng-dev libtiff-dev libjasper-dev \
     python3-numpy \
     python3-pip
-
-RUN mkdir OpenCV && cd OpenCV
 
 RUN apt-get update && apt-get install -y \
   build-essential \
@@ -56,6 +57,10 @@ RUN apt-get update && apt-get install -y \
   libxvidcore-dev \
   x264 \ 
   v4l-utils \
+  liblapack-dev \
+  liblapack3 \
+  libopenblas-base \
+  libopenblas-dev \
  # Doesn't work ffmpeg \
   libgtk2.0-dev \
 #  zlib1g-dev \
@@ -64,16 +69,35 @@ RUN apt-get update && apt-get install -y \
   libhdf5-dev \
   wget \
   sudo
-    
+
+
+
+ARG cvVersion="3.4"
+
+# source
+RUN \
+	git clone https://github.com/opencv/opencv_contrib && \
+	cd opencv_contrib && \
+	git checkout $cvVersion
+
+RUN \
+	git clone https://github.com/opencv/opencv && \
+	cd opencv && \
+	git checkout $cvVersion && \
+    mkdir build
+
 # install OpenCV
-RUN cd /opt && \
-  wget https://github.com/daveselinger/opencv/archive/3.1.0-with-cuda8.zip -O opencv-3.1.0.zip -nv && \
-  unzip opencv-3.1.0.zip && \
-  mv opencv-3.1.0-with-cuda8 opencv-3.1.0 && \
-  cd opencv-3.1.0 && \
-  rm -rf build && \
-  mkdir build && \
-  cd build && \
+#RUN cd /opt && \
+  #wget https://github.com/daveselinger/opencv/archive/3.1.0-with-cuda8.zip -O opencv-3.1.0.zip -nv && \
+  #unzip opencv-3.1.0.zip && \
+  #mv opencv-3.1.0-with-cuda8 opencv-3.1.0 && \
+  #cd opencv-3.1.0 && \
+  #rm -rf build && \
+  #mkdir build && \
+
+WORKDIR /opencv/build
+
+RUN \
   cmake -D CUDA_ARCH_BIN=3.2 \
     -D CUDA_ARCH_PTX=3.2 \
     -D CMAKE_BUILD_TYPE=RELEASE \
@@ -85,11 +109,15 @@ RUN cd /opt && \
     -D WITH_QT=ON \
     -D ENABLE_PRECOMPILED_HEADERS=OFF \
  #   -D USE_GStreamer=ON \
+    -D WITH_IPP=ON \
+    -D INSTALL_CREATE_DISTRIB=ON \
     -D WITH_OPENGL=ON .. && \
-  make -j4 && \
+  export cpus=$(grep -c ^processor /proc/cpuinfo) && \
+  make -j$cpus && \
   make install && \
   echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf.d/opencv.conf && \
   ldconfig
-RUN cp /opt/opencv-3.1.0/build/lib/cv2.so /usr/lib/python2.7/dist-packages/cv2.so
+
+#RUN cp /opt/opencv-3.1.0/build/lib/cv2.so /usr/lib/python2.7/dist-packages/cv2.so
 
 WORKDIR /root/
