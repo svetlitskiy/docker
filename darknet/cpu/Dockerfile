@@ -6,7 +6,7 @@
 # Copyright (c) 2019 Aleksey Svetlitskiy - https://github.com/svetlitskiy/docker
 #
 
-FROM opencv3:latest
+FROM ubuntu:16.04
 
 
 MAINTAINER Aleksey Svetlitskiy a.svetlitskiy@gmail.com
@@ -30,25 +30,24 @@ RUN \
 	apt-get install -y \
 	wget
 
-# build repo
+# openCV
 RUN \
-	git clone https://github.com/svetlitskiy/docker
+	apt-get install -y \
+	libopencv-dev \
+	python-opencv
 
 # build repo
 RUN \
 	git clone https://github.com/AlexeyAB/darknet darknet_AB && \
-	cp docker/darknet/cpu/Makefile darknet_AB/Makefile && \
 	cd darknet_AB
 
 WORKDIR /root/darknet_AB
 
-RUN \
-	make
 
 # download weights full (accurate most) and tiny (faster , less accurate) models
 # darknet rnns
-RUN \
-	wget http://pjreddie.com/media/files/yolo.weights
+#RUN \
+	#wget http://pjreddie.com/media/files/yolo.weights
 	
 # darknet nightmare	
 #RUN \
@@ -76,6 +75,11 @@ RUN \
 	#./darknet detector test cfg/coco.data cfg/yolo.cfg yolo.weights data/dog.jpg
 # test rnns
 	#./darknet rnn generate cfg/rnn.cfg /root/shakespeare.weights -srand 0 -seed CLEOPATRA -len 300
+
+RUN \
+	sed -i 's/OPENCV=.*/OPENCV=1/' Makefile && \
+	sed -i 's/LIBSO=.*/LIBSO=1/' Makefile && \
+	make
 
 RUN apt-get install -y x11vnc && \
     mkdir /root/home

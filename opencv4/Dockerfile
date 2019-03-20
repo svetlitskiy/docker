@@ -109,7 +109,15 @@ RUN \
 
 RUN \
     export cpus=$(grep -c ^processor /proc/cpuinfo) && \
-    make -j$cpus
+    make -j$cpus && \
+    make install && \
+    echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf.d/opencv.conf && \
+    ldconfig
+
+RUN \
+    pip3 install --upgrade pip && \
+    pip install numpy configparser
+
 
 RUN \
     make install
